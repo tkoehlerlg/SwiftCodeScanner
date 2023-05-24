@@ -145,7 +145,6 @@ extension CodeScannerView {
         
         var captureSession: AVCaptureSession?
         var previewLayer: AVCaptureVideoPreviewLayer!
-        let fallbackVideoCaptureDevice = AVCaptureDevice.default(for: .video)
 
         private lazy var viewFinder: UIImageView? = {
             guard let image = UIImage(named: "viewfinder", in: .module, with: nil) else {
@@ -287,7 +286,7 @@ extension CodeScannerView {
         private func setupCaptureDevice() {
             captureSession = AVCaptureSession()
 
-            guard let videoCaptureDevice = parentView.videoCaptureDevice ?? fallbackVideoCaptureDevice else {
+            guard let videoCaptureDevice = parentView.videoCaptureDevice else {
                 return
             }
 
@@ -356,7 +355,7 @@ extension CodeScannerView {
         public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
             guard touches.first?.view == view,
                   let touchPoint = touches.first,
-                  let device = parentView.videoCaptureDevice ?? fallbackVideoCaptureDevice,
+                  let device = parentView.videoCaptureDevice,
                   device.isFocusPointOfInterestSupported
             else { return }
 
@@ -415,13 +414,11 @@ extension CodeScannerView {
         }
         #endif
         
-        func updateViewController(isTorchOn: Bool, isGalleryPresented: Bool, isManualCapture: Bool, isManualSelect: Bool) {
-            if let backCamera = AVCaptureDevice.default(for: AVMediaType.video),
-               backCamera.hasTorch
-            {
-                try? backCamera.lockForConfiguration()
-                backCamera.torchMode = isTorchOn ? .on : .off
-                backCamera.unlockForConfiguration()
+        func updateViewController(camera: AVCaptureDevice?, isTorchOn: Bool, isGalleryPresented: Bool, isManualCapture: Bool, isManualSelect: Bool) {
+            if let camera = camera, camera.hasTorch {
+                try? camera.lockForConfiguration()
+                camera.torchMode = isTorchOn ? .on : .off
+                camera.unlockForConfiguration()
             }
             
             if isGalleryPresented && !isGalleryShowing {
